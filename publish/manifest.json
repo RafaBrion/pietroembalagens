@@ -1,0 +1,37 @@
+{
+  "icons": [
+    {
+      "src": "/icon_512x512.da4023a002d2a8354d972c6daa2d0bbe.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon_384x384.fd92df1103d7b526ae74f91304776d33.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon_192x192.5cfc7a35b07b11e973ae7bc9481039e5.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/icon_128x128.7de903acead64e4e2239326e846cfd46.jpeg",
+      "sizes": "128x128",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/icon_96x96.1a6de2d9849f2ec8f577ea40f32b5cae.jpeg",
+      "sizes": "96x96",
+      "type": "image/jpeg"
+    }
+  ],
+  "name": "pietroembalagens",
+  "short_name": "Pietro Embalagens",
+  "orientation": "portrait",
+  "display": "standalone",
+  "start_url": ".",
+  "description": "pietroembalagens",
+  "background_color": "#ffffff",
+  "theme_color": "#fd8043"
+}
