@@ -1,4 +1,69 @@
-// Add your custom CSS here.
-#s-caixas-embalagens-para-doces-e-brigadeiro {
-    display: none !important;
+// Desktop fixes for Pietro Embalagens header navigation/search.
+@media (min-width: 992px) {
+  .header__search {
+    overflow: visible;
+  }
+
+  #instant-search {
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    z-index: 1090;
+  }
+
+  #instant-search .search__box {
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow);
+    left: 0;
+    margin: 0;
+    max-height: min(32rem, 70vh);
+    position: absolute;
+    top: 0;
+    width: 100%;
+  }
+
+  #instant-search .search__body {
+    max-height: calc(min(32rem, 70vh) - 5.5rem);
+  }
+
+  .header__nav-block {
+    position: relative;
+  }
+
+  .header__nav > .d-inline-block {
+    position: static;
+  }
+
+  .header__submenu {
+    align-items: start;
+    column-gap: var(--spacer-4);
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    left: 0;
+    margin-top: 0.75rem;
+    max-height: min(34rem, 75vh);
+    max-width: min(1100px, 100%);
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: var(--spacer-4);
+    right: auto;
+    row-gap: var(--spacer-3);
+    width: 100%;
+  }
+
+  .header__submenu > div {
+    min-width: 0;
+  }
+
+  .header__submenu a {
+    display: block;
+    overflow-wrap: anywhere;
+    text-align: left;
+    white-space: normal;
+  }
+
+  .header__submenu-subcategory {
+    margin-top: 0.35rem;
+  }
 }
