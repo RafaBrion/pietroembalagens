@@ -30,6 +30,14 @@ Para restaurar: `git checkout backup-29mar2026` ou `git checkout v-antes-ajustes
 
 ## ✅ Histórico de Alterações
 
+### 14/10/2026 — Velocidade 4: imagens principais e reserva do banner (draft, publicação bloqueada)
+
+- Prioridade alta somente para o primeiro banner ativo da primeira seção habilitada da home e foto principal SSR do produto, com uma variante responsiva; imagens, qualidade e recortes finais preservados.
+- A primeira comparação encontrou instabilidade de altura antes de o parser alcançar os quadros personalizados. Advisor aprovou classe SSR/condição CSS para aplicar desde o início a reserva geométrica já existente, mantendo o fallback sem `:has()`.
+- Aplicação em dois commits separáveis, `91060ccf` e `fde272c1`, que devem seguir juntos. 131 testes e build/SSR passaram; rollback conjunto testado com 124 testes e novo build, preservando fontes/helper anteriores. Exige novo deploy Hosting + SSR. 2b continua fora.
+- Advisor liberou somente branch/PR draft, sem merge/deploy: comparação final incompleta por falhas externas/CDN e 404 do SSR no primeiro aquecimento de produto. Concluir os quatro cenários, revisar novamente com advisor e obter aprovação concreta antes de publicar.
+- Resultados, limites de medições/erros externos, parecer final e publicação: `docs/ENTREGA-IMAGENS.md`. Ainda sem ganho público de LCP confirmado e sem deploy desta entrega.
+
 ### 14/10/2026 — Velocidade 3: Quicksand local (publicada)
 
 - Mesmos binários, família, nove faces e pesos da fonte atual, com licença/proveniência; elimina a importação tardia de Quicksand e pré-carrega somente Latin.
