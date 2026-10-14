@@ -4,7 +4,7 @@ const { createHash } = require('crypto')
 const { ConcatSource } = require('webpack-sources')
 
 // Workbox precaches /app/index.html but its manifest contains only the main
-// bundle. An HTML-only checkout change must also change the worker bytes.
+// bundle. Inline head/body changes must also change the worker bytes.
 class CheckoutHtmlRevisionPlugin {
   apply (compiler) {
     compiler.hooks.emit.tap('CheckoutHtmlRevisionPlugin', compilation => {
@@ -12,7 +12,8 @@ class CheckoutHtmlRevisionPlugin {
       if (!worker) throw new Error('Expected production service worker sw.js')
       const head = fs.readFileSync(path.join(__dirname, 'template/pages/@/head.ejs'), 'utf8')
       const hash = createHash('sha256')
-      hash.update(JSON.parse(fs.readFileSync(path.join(__dirname, 'content/code.json'), 'utf8')).html_head)
+      const customCode = JSON.parse(fs.readFileSync(path.join(__dirname, 'content/code.json'), 'utf8'))
+      hash.update(JSON.stringify([customCode.html_head, customCode.html_body]))
       hash.update(head)
       const helpers = head.match(/pe-checkout-enhancements\.[a-f0-9]+\.js/g) || []
       helpers.forEach(filename => hash.update(fs.readFileSync(path.join(__dirname, 'template/public/assets', filename))))

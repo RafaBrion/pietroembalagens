@@ -30,12 +30,19 @@ Para restaurar: `git checkout backup-29mar2026` ou `git checkout v-antes-ajustes
 
 ## ✅ Histórico de Alterações
 
-### 14/10/2026 — Velocidade 2a: ajustes de checkout por rota (em revisão)
+### 14/10/2026 — Velocidade 2b: observadores de menu/busca (em revisão)
+
+- Observação de montagem termina por sucesso/prazo; abertura por gesto recupera conteúdo interno novo. Busca acompanha o wrapper estável quando Vue troca seu elemento principal.
+- No teste de 600 inserções, callbacks dos observadores de montagem caíram de 60 para zero. Custo adicional: aproximadamente 0,4 KB comprimido por HTML, sem requisição nova. O laboratório não demonstrou melhora consistente de carregamento.
+- 132 testes, build/SSR, menus/buscas desktop/mobile, fluxo até entrada do checkout e PWA/rollback passaram na validação local. Sem publicação desta entrega até aprovação concreta de Rafael.
+- Detalhes, limitações e reversão isolada: `docs/ENTREGA-OBSERVADORES-MENU-BUSCA.md`.
+
+### 14/10/2026 — Velocidade 2a: ajustes de checkout por rota (publicada)
 
 - Textos de identificação, ordem Pix/boleto/cartão e eventos das etapas saem do head global para um helper versionado carregado apenas no app. Datas de entrega, frete grátis e cupons continuam compartilhados com o catálogo/carrinho.
 - O worker recebe um marcador determinístico para atualizar o HTML precacheado da PWA quando esse head/helper mudar. Bundles/chunks existentes e políticas de cache permanecem iguais.
 - Validação local: 124 testes, build/SSR, menu/busca desktop e celular, produto/carrinho/entrada do checkout, fixture de etapas e transição PWA/rollback passaram. Primeiro app ganha uma requisição e +371 B gzip / +272 B Brotli; home reduz 802 B gzip / 888 B Brotli. Ainda não há ganho de velocidade pública confirmado.
-- Publicação ainda depende de aprovação concreta de Rafael e verificação do deploy. Rollback: reverter somente esta entrega **retendo o helper novo** para páginas/abas em cache; exige novo build e deploy Hosting + SSR. Procedimento e limites: `docs/ENTREGA-JAVASCRIPT-CHECKOUT.md`.
+- Publicada em 14/10/2026 às 07h03 (Brasília), PR 89, merge `deed7fd2`, Actions `38546529280`; Hosting `c9387863ac4b4db2` e SSR `634` ACTIVE. Validação pública e aceite final do advisor concluídos. Rollback: reverter somente esta entrega **retendo o helper novo** para páginas/abas em cache; exige novo build e deploy Hosting + SSR. Procedimento e limites: `docs/ENTREGA-JAVASCRIPT-CHECKOUT.md`.
 
 ### 13/10/2026 — Banner da home 1920×400 inteiro no computador e 20 px a menos antes de "Categorias"
 
