@@ -66,8 +66,29 @@ São quatro pares por cenário, em laboratório SSR local, com rede/CDN reais. T
 
 O diagnóstico foi reproduzido depois em um servidor sintético local, com Node 20/Puppeteer 24.15/Chromium 154 e o mesmo mecanismo de interceptação: duas navegações sem worker retornam 200; com um worker que repassa a navegação à rede, Puppeteer retorna nulo embora o CDP registre a resposta 200 real. O ajuste exclusivo de QA valida a resposta/corpo desse mesmo documento; não troca o worker nem a aplicação. Teste negativo 404 e incompatibilidades de URL, frame, loader e requestId são rejeitados. O fixture está em `worker-check.cjs` e gera `navigation-fixture.json` no artefato, separado das métricas da loja.
 
+## Terceira execução real — 38639730332 e encerramento do preparo
+
+[Execução de 14/10/2026](https://github.com/RafaBrion/pietroembalagens/actions/runs/38639730332), SHA QA `2f90cc22`: comparação novamente **completa, 40/40**, sem exceções JS na coorte. Builds, testes existentes, sondas SSR reais/controladas e PWA passaram. A correção CDP confirmou HTTP 200 real com service worker nas navegações que o Puppeteer retornava como nulas; categoria e busca passaram nos quatro casos.
+
+| Cenário | LCP mediano atual → candidato | Δ mediano pareado | CLS mediano atual → candidato |
+|---|---:|---:|---:|
+| Home 390 | 1542 → 1574 ms | +42 ms | 0,07865 → 0,07914 |
+| Produto 390 | 1884 → 1860 ms | +14 ms | 0,04519 → 0,04172 |
+| Home 1440 | 1574 → 1596 ms | +16 ms | 0,00015 → 0,00015 |
+| Produto 1440 | 1908 → 1922 ms | +14 ms | 0,01413 → 0,01057 |
+
+Esta coorte e a segunda são registros separados, sem combinar amostras nem escolher a melhor tentativa. A prioridade inicial foi elevada de Medium para High e as fontes/dimensões da imagem permaneceram consistentes, mas **não houve ganho consistente de LCP demonstrado**. Os valores são de laboratório; não demonstram ganho ou regressão relevante em produção.
+
+O job permanece bloqueado pelos quatro casos funcionais: baseline/candidato desktop e candidato mobile excederam o tempo ao voltar da segunda para a primeira foto; baseline mobile excedeu o tempo ao navegar da busca para o produto. Menus/categoria/busca passaram até esses pontos. **Zoom, variação, carrinho e entrada do checkout não foram concluídos nesta execução.** As falhas, capturas e rastros foram preservados, sem repetição automática ou aprovação por outra versão.
+
+O advisor identificou uma hipótese na fonte da galeria: a thumbnail pode mudar o índice selecionado enquanto o Glide ainda bloqueia movimentos durante a transição. Isso explicaria thumbnail inicial selecionada com a segunda foto visível, mas exige diagnóstico instrumentado; a causa e a preexistência não estão comprovadas. O timeout de navegação mobile é uma pendência separada. Nenhuma correção de aplicação foi implementada para essas falhas.
+
+**Parecer do advisor:** preparação da alternativa de CI concluída, entrega 4 em HOLD, sem merge/deploy e sem recomendação de publicar como melhoria de velocidade. Próximo trabalho delimitado: diagnóstico funcional da galeria e do timeout, preservando as comparações completas. Não é necessário repetir a coleta de desempenho para investigar esses fluxos.
+
+O ajuste final de higiene limita os novos rastros ao documento/frame principal e às falhas de requests acompanhados; URLs de subframes externos não são necessárias à prova. Sete testes QA e fixture de navegador local aprovaram resposta/corpo 200, rejeição de 404 e exclusão de um iframe efetivamente carregado. Esse ajuste final de rastros e documentação usa `[skip ci]`: **não foi executado no Actions** e não substitui o SHA `2f90cc22` como referência da terceira rodada. Não altera aplicação, medições ou falhas já registradas.
+
 ## Reversão da CI
 
-Desabilitar este workflow no GitHub ou reverter somente o commit de CI na branch `test/entrega-4-actions`. Ele contém os arquivos de `.github/qa/images/`, `validate-images.yml` e a documentação desta validação; identificar o SHA efetivo em `git log`. Não reverter os commits de aplicação para desligar o teste. Não usar reset, force push nem alterar `master`.
+Desabilitar este workflow no GitHub ou reverter somente os commits exclusivos da CI na branch `test/entrega-4-actions`. Eles contêm os arquivos de `.github/qa/images/`, `validate-images.yml` e a documentação desta validação; identificar o SHA efetivo em `git log`. Não reverter os commits de aplicação para desligar o teste. Não usar reset, force push nem alterar `master`.
 
 Uma execução pode ser cancelada pelo painel Actions; isso interrompe somente o runner de QA. Nenhum recurso de produção foi modificado. Os servidores são locais ao job e encerrados ao terminar; o runner é descartável. Só a pasta de relatórios é enviada como artefato, excluindo snapshots, `.ecom.json`, headers, cookies, credenciais, dependências e fontes SSR.

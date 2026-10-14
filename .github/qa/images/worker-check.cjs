@@ -10,7 +10,7 @@ async function checkWorkerNavigation (browser) {
     } else {
       response.statusCode = request.url === '/missing' ? 404 : 200
       response.setHeader('Content-Type', 'text/html')
-      response.end('<h1>' + request.url + '</h1>')
+      response.end('<h1>' + request.url + '</h1>' + (request.url === '/with-worker' ? '<iframe src="/iframe"></iframe>' : ''))
     }
   })
   server.listen(0, '127.0.0.1')
@@ -35,8 +35,12 @@ async function checkWorkerNavigation (browser) {
     assert.equal(response.status(), 200)
     assert.ok((await response.text()).includes('<h1>/with-worker</h1>'))
     assert.equal(trace.records.at(-1).events.find(event => event.event === 'response').fromServiceWorker, true)
+    await page.waitForSelector('iframe')
+    const child = await (await page.$('iframe')).contentFrame()
+    await child.waitForSelector('h1')
+    assert.equal(trace.events.some(event => event.url?.includes('/iframe')), false, 'Loaded subframe details must stay out of navigation audit')
     await assert.rejects(navigate('/missing'), /HTTP status must be 200/)
-    return { status: 'passed', records: trace.records }
+    return { status: 'passed', subframe: 'loaded and excluded from audit', records: trace.records }
   } finally {
     await context.close()
     await new Promise(resolve => server.close(resolve))

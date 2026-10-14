@@ -18,13 +18,14 @@ function validateDocument (requested, frame, request, response) {
 async function trackNavigation (page) {
   const session = await page.createCDPSession()
   await session.send('Network.enable'); await session.send('Page.enable')
-  const events = [], finished = new Set()
-  session.on('Network.requestWillBeSent', e => { if (e.type === 'Document') events.push({ event: 'request', requestId: e.requestId, loaderId: e.loaderId, frameId: e.frameId, url: e.request.url }) })
-  session.on('Network.responseReceived', e => { if (e.type === 'Document') events.push({ event: 'response', requestId: e.requestId, loaderId: e.loaderId, frameId: e.frameId, url: e.response.url, status: e.response.status, fromServiceWorker: e.response.fromServiceWorker }) })
-  session.on('Network.loadingFinished', e => finished.add(e.requestId))
-  session.on('Network.loadingFailed', e => events.push({ event: 'failed', requestId: e.requestId, error: e.errorText }))
-  session.on('Page.frameNavigated', e => events.push({ event: 'frame', id: e.frame.id, parentId: e.frame.parentId, loaderId: e.frame.loaderId, url: e.frame.url }))
-  session.on('Page.navigatedWithinDocument', e => events.push({ event: 'within-document', frameId: e.frameId, url: e.url }))
+  const mainFrameId = (await session.send('Page.getFrameTree')).frameTree.frame.id
+  const events = [], finished = new Set(), tracked = new Set()
+  session.on('Network.requestWillBeSent', e => { if (e.type === 'Document' && e.frameId === mainFrameId) { tracked.add(e.requestId); events.push({ event: 'request', requestId: e.requestId, loaderId: e.loaderId, frameId: e.frameId, url: e.request.url }) } })
+  session.on('Network.responseReceived', e => { if (e.type === 'Document' && e.frameId === mainFrameId) events.push({ event: 'response', requestId: e.requestId, loaderId: e.loaderId, frameId: e.frameId, url: e.response.url, status: e.response.status, fromServiceWorker: e.response.fromServiceWorker }) })
+  session.on('Network.loadingFinished', e => { if (tracked.has(e.requestId)) finished.add(e.requestId) })
+  session.on('Network.loadingFailed', e => { if (tracked.has(e.requestId)) events.push({ event: 'failed', requestId: e.requestId, error: e.errorText }) })
+  session.on('Page.frameNavigated', e => { if (e.frame.id === mainFrameId) events.push({ event: 'frame', id: e.frame.id, parentId: e.frame.parentId, loaderId: e.frame.loaderId, url: e.frame.url }) })
+  session.on('Page.navigatedWithinDocument', e => { if (e.frameId === mainFrameId) events.push({ event: 'within-document', frameId: e.frameId, url: e.url }) })
   const records = []
   async function begin (url) {
     const before = (await session.send('Page.getFrameTree')).frameTree.frame
@@ -59,6 +60,6 @@ async function trackNavigation (page) {
   function fail (record, error) {
     record.to = page.url(); record.events = events.slice(record.start); record.error = error.message
   }
-  return { records, begin, complete, fail }
+  return { records, events, begin, complete, fail }
 }
 module.exports = { sameDocument, validateDocument, trackNavigation }
