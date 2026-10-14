@@ -5,6 +5,7 @@ const path = require('node:path')
 const yaml = require('yaml')
 const { validateCatalog, frozenRouter, readContext } = require('./catalog.cjs')
 const { summarize } = require('./statistics.cjs')
+const { sameDocument } = require('./navigation.cjs')
 
 function fixture () {
   return {
@@ -57,6 +58,10 @@ test('SSR identity reader handles nested JSON/escaped braces without evaluating 
   const context = { resource: 'products', body: { _id: 'id', name: 'a } brace " quote', pictures: [{ normal: { url: 'https://example.com/picture' } }] } }
   assert.deepEqual(readContext('window._context === undefined; window._context = ' + JSON.stringify(context) + ';throw new Error("must not execute")'), context)
   assert.throws(() => readContext('<html>404</html>'), /missing/)
+})
+test('a null browser response cannot hide a different route, origin or search query', () => {
+  assert.equal(sameDocument('http://127.0.0.1:9402/category#old', 'http://127.0.0.1:9402/category#new'), true)
+  for (const url of ['http://127.0.0.1:9402/other', 'http://127.0.0.1:9403/category', 'http://127.0.0.1:9402/category?term=x']) assert.equal(sameDocument('http://127.0.0.1:9402/category', url), false)
 })
 test('workflow stays on the isolated branch with read-only permissions and no deployment credentials', () => {
   const filename = path.resolve(__dirname, '../../workflows/validate-images.yml')

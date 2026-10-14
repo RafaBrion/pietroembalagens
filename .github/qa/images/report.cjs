@@ -19,6 +19,7 @@ for (const row of comparison?.summaries || []) lines.push(`| ${row.name} ${row.w
 if (!comparison?.summaries) lines.push('| Comparação incompleta | — | — | — | — |')
 lines.push('', '## Limites e próximos gates', '',
   `- Runs com exceções JS: ${comparison?.runs?.filter(row => row.errors?.length).length || 0}; todos preservados, inclusive falhas e resultados desfavoráveis.`,
+  `- Produtos ainda em SSR na coleta: ${comparison?.runs?.filter(row => row.name === 'product' && row.hero?.mode === 'SSR').length || 0}; não se esperou hidratação para melhorar o resultado.`,
   '- Consulte execution.json, browser-regression.json, pwa.json, comparison.json, logs e PNGs no artefato. Fases ausentes ou incompletas não são aprovadas.',
   '- A corrida preexistente de _context não foi suprimida nem corrigida. Falhas de rede/SSR/dependências bloqueiam liberação.',
   '- Sem login autenticado, pedido, pagamento ou Purchase. Marketing bloqueado nos testes.',

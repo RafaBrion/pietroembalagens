@@ -2,6 +2,7 @@ const assert = require('node:assert/strict')
 const path = require('node:path')
 const { config, wait, save, launch, origin, safeUrl, preparePage } = require('./common.cjs')
 const { summarize } = require('./statistics.cjs')
+const { inspectHero } = require('./hero.cjs')
 const result = {
   status: 'running', note: config.note, runs: [],
   conditions: { measured: 32, warmups: 8, pairsPerScenario: 4, order: 'AB/BA, all runs retained; no performance retries', cpu: 4, downMbps: 5, upMbps: 1, latencyMs: 80, viewport: '390x844 touch or1440x844;DPR1', cache: 'disabled; fresh browser process/context per opening; normal SW', observation: 'five seconds after load', catalog: 'SSR local with fixed public catalog, not production/API TTFB', cdn: 'real network, standard TLS, no mirrors or custom CA', marketing: 'blocked' }
@@ -45,18 +46,16 @@ async function run (label, name, pathname, width, pair, warmup) {
         if (shift.time - last > 1000 || shift.time - first > 5000) { total = 0; first = shift.time }
         total += shift.value; last = shift.time; cls = Math.max(cls, total)
       }
-      const image = document.querySelector('.banner-slider img') || document.querySelector('.gallery__stage .product__picture img')
-      const rect = image?.getBoundingClientRect()
       const navigation = performance.getEntriesByType('navigation')[0]
       return {
         ...window.qa, cls, ttfb: navigation.responseStart, lcpMs: window.qa.lcp.at(-1)?.time ?? null,
         navigation: { duration: navigation.duration, responseEnd: navigation.responseEnd, transferSize: navigation.transferSize },
         dependencies: { jquery: typeof window.jQuery === 'function', popper: typeof window.Popper === 'function' },
-        hero: image && { url: image.currentSrc, priority: image.fetchPriority, natural: [image.naturalWidth, image.naturalHeight], rect: { x: rect.x, y: rect.y, w: rect.width, h: rect.height } },
         highCount: document.querySelectorAll('img[fetchpriority=high]').length,
         sw: navigator.serviceWorker.controller?.state ?? null
       }
     }))
+    row.hero = await page.evaluate(inspectHero)
     row.afterTtfb = row.lcpMs === null ? null : row.lcpMs - row.ttfb
     row.errors = prepared.errors
     row.failures = prepared.failures
@@ -69,6 +68,7 @@ async function run (label, name, pathname, width, pair, warmup) {
     assert.equal(row.status, 200)
     assert.ok(row.dependencies.jquery && row.dependencies.popper, 'Critical dependency unavailable')
     assert.ok(row.hero?.natural[0] > 0 && row.hero.natural[1] > 0)
+    assert.ok(row.hero.visible, 'Primary image must be visible in viewport')
     assert.equal(row.lcp.at(-1)?.url, row.hero.url, 'Actual LCP must be the tested image')
     assert.ok(Number.isFinite(row.lcpMs))
     const heroRequests = row.requests.filter(request => request.type === 'Image' && request.url === row.hero.url)

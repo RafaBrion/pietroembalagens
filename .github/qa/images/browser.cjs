@@ -3,14 +3,35 @@ const assert = require('node:assert/strict')
 const { config, wait: pause, launch, preparePage: basePage, save } = require('./common.cjs')
 const { readContext } = require('./catalog.cjs')
 const snapshot = JSON.parse(fs.readFileSync(require('node:path').join(config.root, 'catalog.json')))
+const { sameDocument } = require('./navigation.cjs')
 const output = config.reports
+async function verifyNavigation (page, response, from, url) {
+  const to = page.url()
+  const audit = { from, requested: url, to, status: response?.status() ?? null }
+  page.qaNavigations.push(audit)
+  assert.equal(new URL(to).origin, new URL(url).origin, 'Unexpected navigation origin')
+  assert.equal(new URL(to).pathname, new URL(url).pathname, 'Unexpected navigation destination')
+  assert.equal(new URL(to).search, new URL(url).search, 'Unexpected navigation query')
+  if (response) {
+    assert.equal(response.status(), 200, 'Navigation: ' + url)
+    audit.method = 'browser HTTP navigation'
+    return response
+  }
+  assert.ok(sameDocument(from, to), 'Null navigation response on a changed document: ' + JSON.stringify(audit))
+  const proof = await fetch(url, { redirect: 'manual' })
+  audit.method = 'same-document browser navigation plus separate HTTP GET'
+  audit.separateHttpStatus = proof.status
+  assert.equal(proof.status, 200, 'Separate GET for same-document navigation')
+  return { text: () => proof.text() }
+}
 async function navigate (page, url) {
+  const from = page.url()
   const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 })
-  assert.equal(response.status(), 200, 'Navigation: ' + url)
-  return response
+  return verifyNavigation(page, response, from, url)
 }
 async function preparePage (browser, width) {
   const prepared = await basePage(browser, width)
+  prepared.page.qaNavigations = []
   const requests = []
   prepared.page.on('request', request => requests.push(request.url()))
   await prepared.page.evaluateOnNewDocument(() => {
@@ -71,7 +92,9 @@ async function storefront (browser, port, label, width) {
       await page.click('#accordion-menu .menu__btn--close'); await pause(550)
       await page.click('#search-input')
       await page.type('#search-input', 'brigadeiro')
-      const [response] = await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), page.keyboard.press('Enter')]); assert.equal(response.status(), 200)
+      const from = page.url()
+      const [response] = await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), page.keyboard.press('Enter')])
+      await verifyNavigation(page, response, from, origin + '/search?term=brigadeiro')
       assert.ok(page.url().includes('/search?term=brigadeiro'))
       checks.push('mobile menu drill-down/back and visible header search submission')
     }
@@ -93,12 +116,20 @@ async function storefront (browser, port, label, width) {
     checks.push('real Vue search mountpoint replacement and single reservation: ' + JSON.stringify(searchMounts))
     await navigate(page, origin + config.product)
     await page.waitForSelector('#addCart', { timeout: 20000 })
-    const firstImage = await page.$eval('.gallery__stage img', el => ({src: el.currentSrc, priority: el.fetchPriority, width: el.width, height: el.height}))
+    await page.waitForSelector('.gallery__stage .glide__slide--active img', { visible: true, timeout: 20000 })
+    const firstImage = await page.$eval('.gallery__stage .glide__slide--active img', el => ({src: el.currentSrc, priority: el.fetchPriority, width: el.width, height: el.height}))
     if (label === 'candidate') assert.equal(firstImage.priority, 'high')
     const thumbs = await page.$$('.gallery__item:not(.gallery__item--video)')
     if (thumbs.length > 1) {
-      await thumbs[1].click(); await page.waitForFunction(src => { const image = document.querySelector('.gallery__stage img'); return image.complete && image.naturalWidth > 0 && image.currentSrc !== src }, {}, firstImage.src)
-      await thumbs[0].click(); await page.waitForFunction(src => document.querySelector('.gallery__stage img').currentSrc === src, {}, firstImage.src)
+      const pictures = snapshot.routes[0].context.body.pictures
+      const urls = picture => [picture.normal?.url, picture.big?.url].filter(Boolean)
+      const photo = async expected => {
+        await page.waitForFunction(expected => { const image = document.querySelector('.gallery__stage .glide__slide--active img'); return image?.complete && image.naturalWidth > 0 && expected.includes(image.currentSrc) }, {}, expected)
+      }
+      await thumbs[1].click(); await photo(urls(pictures[1]))
+      assert.equal(await thumbs[1].evaluate(el => el.classList.contains('gallery__item--selected')), true)
+      await thumbs[0].click(); await photo(urls(pictures[0]))
+      assert.equal(await thumbs[0].evaluate(el => el.classList.contains('gallery__item--selected')), true)
       checks.push('gallery second/first thumbnail navigation')
     }
     await page.click('.gallery__stage .gallery__big-image')
@@ -143,10 +174,10 @@ async function storefront (browser, port, label, width) {
     checks.push('checkout route opens without submitting an order')
     await page.screenshot({ path: `${output}/${label}-${width}-checkout.png` })
     assert.deepEqual(errors, [], `${label}/${width} page errors`)
-    return { label, width, checks, pageErrors: errors, productName, checkout }
+    return { label, width, checks, navigations: page.qaNavigations, pageErrors: errors, productName, checkout }
   } catch (error) {
     await page.screenshot({ path: `${output}/${label}-${width}-failure.png` }).catch(() => {})
-    fs.writeFileSync(`${output}/${label}-${width}-failure.json`, JSON.stringify({ url: page.url(), error: error.message, pageErrors: errors, checks }, null, 2))
+    fs.writeFileSync(`${output}/${label}-${width}-failure.json`, JSON.stringify({ url: page.url(), error: error.message, pageErrors: errors, checks, navigations: page.qaNavigations, stack: error.stack }, null, 2))
     throw error
   } finally { await page.browserContext().close() }
 }

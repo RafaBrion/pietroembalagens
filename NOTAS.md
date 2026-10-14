@@ -34,6 +34,7 @@ Para restaurar: `git checkout backup-29mar2026` ou `git checkout v-antes-ajustes
 
 - Preparada branch `test/entrega-4-actions` para testar baseline/candidato em runner do GitHub, fora do proxy deste ambiente. Workflow limitado à branch, somente leitura, sem secrets/deploy ou mudanças na aplicação/workflow de produção.
 - Inclui builds/testes com lockfiles, sonda SSR real, comparação com catálogo público fixo, fluxos desktop/celular, PWA/rollback e artefatos mesmo em falhas. Job verde exige revisão do advisor e aprovação concreta; entrega 4 continua em HOLD e 2B permanece fora.
+- Primeira execução `38635847707`: ambos os builds/SSR reais e PWA passaram; fluxos/coorte ficaram incompletos por duas falhas do teste, preservadas no artefato. Correções somente QA e nova coorte completa; sem conclusão de ganho ou publicação.
 - Execução, limites e reversão separada da CI: `docs/VALIDACAO-IMAGENS-ACTIONS.md`. Não mesclar a branch de QA em master para executar os testes.
 
 ### 14/10/2026 — Velocidade 4: imagens principais e reserva do banner (draft, publicação bloqueada)
