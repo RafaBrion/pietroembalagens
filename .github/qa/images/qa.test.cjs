@@ -5,7 +5,7 @@ const path = require('node:path')
 const yaml = require('yaml')
 const { validateCatalog, frozenRouter, readContext } = require('./catalog.cjs')
 const { summarize } = require('./statistics.cjs')
-const { sameDocument } = require('./navigation.cjs')
+const { sameDocument, validateDocument } = require('./navigation.cjs')
 
 function fixture () {
   return {
@@ -62,6 +62,17 @@ test('SSR identity reader handles nested JSON/escaped braces without evaluating 
 test('a null browser response cannot hide a different route, origin or search query', () => {
   assert.equal(sameDocument('http://127.0.0.1:9402/category#old', 'http://127.0.0.1:9402/category#new'), true)
   for (const url of ['http://127.0.0.1:9402/other', 'http://127.0.0.1:9403/category', 'http://127.0.0.1:9402/category?term=x']) assert.equal(sameDocument('http://127.0.0.1:9402/category', url), false)
+})
+test('document evidence rejects non-200 or mismatched request, URL, frame and loader', () => {
+  const url = 'http://127.0.0.1:9402/category'
+  const frame = { id: 'main', loaderId: 'document1', url }
+  const request = { frameId: 'main', loaderId: 'document1', requestId: 'request1', url }
+  const response = { ...request, status: 200, fromServiceWorker: true }
+  validateDocument(url, frame, request, response)
+  for (const [key, value] of [['status', 404], ['url', 'http://127.0.0.1:9402/other'], ['url', 'http://127.0.0.1:9403/category'], ['frameId', 'iframe'], ['loaderId', 'stale'], ['requestId', 'another']]) {
+    assert.throws(() => validateDocument(url, frame, request, { ...response, [key]: value }))
+  }
+  assert.throws(() => validateDocument(url, frame, null, null))
 })
 test('workflow stays on the isolated branch with read-only permissions and no deployment credentials', () => {
   const filename = path.resolve(__dirname, '../../workflows/validate-images.yml')

@@ -3,35 +3,19 @@ const assert = require('node:assert/strict')
 const { config, wait: pause, launch, preparePage: basePage, save } = require('./common.cjs')
 const { readContext } = require('./catalog.cjs')
 const snapshot = JSON.parse(fs.readFileSync(require('node:path').join(config.root, 'catalog.json')))
-const { sameDocument } = require('./navigation.cjs')
+const { trackNavigation } = require('./navigation.cjs')
 const output = config.reports
-async function verifyNavigation (page, response, from, url) {
-  const to = page.url()
-  const audit = { from, requested: url, to, status: response?.status() ?? null }
-  page.qaNavigations.push(audit)
-  assert.equal(new URL(to).origin, new URL(url).origin, 'Unexpected navigation origin')
-  assert.equal(new URL(to).pathname, new URL(url).pathname, 'Unexpected navigation destination')
-  assert.equal(new URL(to).search, new URL(url).search, 'Unexpected navigation query')
-  if (response) {
-    assert.equal(response.status(), 200, 'Navigation: ' + url)
-    audit.method = 'browser HTTP navigation'
-    return response
-  }
-  assert.ok(sameDocument(from, to), 'Null navigation response on a changed document: ' + JSON.stringify(audit))
-  const proof = await fetch(url, { redirect: 'manual' })
-  audit.method = 'same-document browser navigation plus separate HTTP GET'
-  audit.separateHttpStatus = proof.status
-  assert.equal(proof.status, 200, 'Separate GET for same-document navigation')
-  return { text: () => proof.text() }
-}
 async function navigate (page, url) {
-  const from = page.url()
-  const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 })
-  return verifyNavigation(page, response, from, url)
+  const record = await page.qaTrace.begin(url)
+  try {
+    const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 })
+    return await page.qaTrace.complete(record, response)
+  } catch (error) { page.qaTrace.fail(record, error); throw error }
 }
 async function preparePage (browser, width) {
   const prepared = await basePage(browser, width)
-  prepared.page.qaNavigations = []
+  prepared.page.qaTrace = await trackNavigation(prepared.page)
+  prepared.page.qaNavigations = prepared.page.qaTrace.records
   const requests = []
   prepared.page.on('request', request => requests.push(request.url()))
   await prepared.page.evaluateOnNewDocument(() => {
@@ -92,9 +76,11 @@ async function storefront (browser, port, label, width) {
       await page.click('#accordion-menu .menu__btn--close'); await pause(550)
       await page.click('#search-input')
       await page.type('#search-input', 'brigadeiro')
-      const from = page.url()
-      const [response] = await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), page.keyboard.press('Enter')])
-      await verifyNavigation(page, response, from, origin + '/search?term=brigadeiro')
+      const record = await page.qaTrace.begin(origin + '/search?term=brigadeiro')
+      try {
+        const [response] = await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }), page.keyboard.press('Enter')])
+        await page.qaTrace.complete(record, response)
+      } catch (error) { page.qaTrace.fail(record, error); throw error }
       assert.ok(page.url().includes('/search?term=brigadeiro'))
       checks.push('mobile menu drill-down/back and visible header search submission')
     }
@@ -174,7 +160,7 @@ async function storefront (browser, port, label, width) {
     checks.push('checkout route opens without submitting an order')
     await page.screenshot({ path: `${output}/${label}-${width}-checkout.png` })
     assert.deepEqual(errors, [], `${label}/${width} page errors`)
-    return { label, width, checks, navigations: page.qaNavigations, pageErrors: errors, productName, checkout }
+    return { label, width, status: 'passed', checks, navigations: page.qaNavigations, pageErrors: errors, productName, checkout }
   } catch (error) {
     await page.screenshot({ path: `${output}/${label}-${width}-failure.png` }).catch(() => {})
     fs.writeFileSync(`${output}/${label}-${width}-failure.json`, JSON.stringify({ url: page.url(), error: error.message, pageErrors: errors, checks, navigations: page.qaNavigations, stack: error.stack }, null, 2))
@@ -188,10 +174,12 @@ async function storefront (browser, port, label, width) {
   const result = { status: 'running', results: [], note: config.note, limits: 'No authenticated login, order, payment or Purchase event. Public read APIs remain live.' }
   try {
     for (const label of ['baseline', 'candidate']) for (const width of [1440, 390]) {
-      result.results.push(await storefront(browser, config.ports[label], label, width))
+      try { result.results.push(await storefront(browser, config.ports[label], label, width)) }
+      catch (error) { result.results.push({ label, width, status: 'failed', error: error.message }) }
       save('browser-regression.json', result)
     }
-    result.status = 'passed'
+    result.status = result.results.every(row => row.status === 'passed') ? 'passed' : 'failed'
+    if (result.status === 'failed') throw new Error('One or more independent storefront cases failed; see individual reports')
   } catch (error) { result.status = 'failed'; result.error = error.message; throw error }
   finally { save('browser-regression.json', result); await browser.close() }
 })().catch(error => { console.error(error.message); process.exitCode = 1 })

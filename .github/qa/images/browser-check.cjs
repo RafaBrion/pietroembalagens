@@ -1,6 +1,7 @@
 const { launch, preparePage, save } = require('./common.cjs')
 const assert = require('node:assert/strict')
 const { inspectHero } = require('./hero.cjs')
+const { checkWorkerNavigation } = require('./worker-check.cjs')
 ;(async () => {
   const browser = await launch()
   try {
@@ -21,6 +22,8 @@ const { inspectHero } = require('./hero.cjs')
     })
     const hydrated = await page.evaluate(inspectHero)
     assert.equal(hydrated.mode, 'hydrated'); assert.equal(hydrated.url, ssr.url)
-    save('browser-runtime.json', { node: process.versions.node, puppeteer: require('puppeteer-core/package.json').version, browser: await browser.version(), executable: process.env.CHROME_BIN || '/usr/bin/google-chrome', tlsVerification: true, heroStates: 'SSR and hydrated fixture verified', check: 'launch/context/viewport/CDP throttling and hero reader; no storefront claim' })
+    const navigation = await checkWorkerNavigation(browser)
+    save('navigation-fixture.json', navigation)
+    save('browser-runtime.json', { node: process.versions.node, puppeteer: require('puppeteer-core/package.json').version, browser: await browser.version(), executable: process.env.CHROME_BIN || '/usr/bin/google-chrome', tlsVerification: true, heroStates: 'SSR and hydrated fixture verified', workerNavigation: '200/body and negative 404 verified with standard service worker', check: 'launch/context/viewport/CDP throttling and hero reader; no storefront claim' })
   } finally { await browser.close() }
 })().catch(error => { console.error(error.message); process.exitCode = 1 })
