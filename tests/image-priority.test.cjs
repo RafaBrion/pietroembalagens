@@ -53,6 +53,24 @@ test('scheduling selects the first active slide and no active slides render no i
   assert.equal(highCount(await render('@/sections/banner-slider', { _, opt: hero })), 0)
 })
 
+test('v2 reserves the existing boxes geometry before a later enabled boxes section is parsed', async () => {
+  const banner = section([slide('hero')])
+  const boxes = { type: 'personalized-boxes' }
+  const _ = helpers([banner, { type: 'info-bar' }, boxes])
+  _.cms = () => ({ pe_header_v2: { enabled: true } })
+  const html = await render('@/sections/banner-slider', { _, opt: banner })
+  assert.match(html, /class="banner-slider pe-h2 pe-h2--boxes-after"/)
+  assert.match(html, /--pe-banner-ratio:0\.209/)
+  for (const sections of [[boxes, banner], [banner], [banner, { ...boxes, enabled: false }]]) {
+    _.state.sections = sections
+    assert.ok(!(await render('@/sections/banner-slider', { _, opt: banner })).includes('pe-h2--boxes-after'))
+  }
+  _.state.sections = [banner, boxes]
+  assert.ok(!(await render('@/sections/banner-slider', { _, opt: section([slide('nested')]) })).includes('pe-h2--boxes-after'))
+  _.cms = () => ({})
+  assert.ok(!(await render('@/sections/banner-slider', { _, opt: banner })).includes('pe-h2--boxes-after'))
+})
+
 test('product SSR differs from the installed template only by the two main-image hints', async () => {
   const file = '@/sections/product-block'
   const local = fs.readFileSync(path.join(pages, file + '.ejs'), 'utf8')

@@ -23,6 +23,13 @@ if (slides && slides.length) {
   let className = 'banner-slider'
   if (((_.cms('header') || {}).pe_header_v2 || {}).enabled) {
     className += ' pe-h2'
+    // Reserve the final geometry before the parser reaches the following boxes.
+    const sections = _.state.sections
+    const sectionIndex = Array.isArray(sections) ? sections.indexOf(opt) : -1
+    if (sectionIndex >= 0 && sections.slice(sectionIndex + 1).some(section =>
+      section && section.enabled !== false && section.type === 'personalized-boxes')) {
+      className += ' pe-h2--boxes-after'
+    }
   }
   if (isBannerFullWidth) {
     className += ' banner-slider--full-width'

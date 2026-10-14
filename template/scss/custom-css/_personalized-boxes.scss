@@ -196,43 +196,47 @@
 // Banner do topo v2 com o tamanho do Mercado Livre, só quando os quadros estão na página (o banner é irmão anterior
 // da seção). Computador: altura pela proporção da arte (1920×400). Celular: cartão de cantos arredondados com ~8:3 (328 × 123 no ML), com a arte
 // cobrindo a caixa. Sem os quadros, ou em navegador sem :has(), vale a altura do topo v2.
-.pe-h2.banner-slider:has(~ .pe-boxes) {
-  width: auto;
-  height: calc((100vw - 32px) * .375) !important;
-  margin: 12px 16px 0;
-  border-radius: 16px;
+// A classe SSR aplica a mesma reserva antes de a seção posterior ser parseada.
+// Sem suporte a :has(), permanece o fallback documentado do topo v2.
+@supports selector(:has(*)) {
+  .pe-h2.banner-slider:is(:has(~ .pe-boxes), .pe-h2--boxes-after) {
+    width: auto;
+    height: calc((100vw - 32px) * .375) !important;
+    margin: 12px 16px 0;
+    border-radius: 16px;
 
-  .glide, .glide__track, .glide__slides, .glide__slide, .glide__slide .banner, .glide__slide a, .glide__slide picture { height: 100%; }
-  .glide__slide .banner, .glide__slide a, .glide__slide picture { display: block; }
-  .glide__slide img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+    .glide, .glide__track, .glide__slides, .glide__slide, .glide__slide .banner, .glide__slide a, .glide__slide picture { height: 100%; }
+    .glide__slide .banner, .glide__slide a, .glide__slide picture { display: block; }
+    .glide__slide img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 
-  // Setas menores e coladas na borda: as do tema (72 × 61 px, a 24 px da borda) cobririam o texto das artes novas,
-  // que começa a ~44 px da borda em 1410 px de tela.
-  .glide__arrow {
-    top: calc(50% - 20px);
-    bottom: auto;
-    margin: 0;
-    transform: none;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    font-size: 20px;
-    line-height: 40px;
-  }
-  .glide__arrow--left { left: 2px; }
-  .glide__arrow--right { right: 2px; }
+    // Setas menores e coladas na borda: as do tema (72 × 61 px, a 24 px da borda) cobririam o texto das artes novas,
+    // que começa a ~44 px da borda em 1410 px de tela.
+    .glide__arrow {
+      top: calc(50% - 20px);
+      bottom: auto;
+      margin: 0;
+      transform: none;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      font-size: 20px;
+      line-height: 40px;
+    }
+    .glide__arrow--left { left: 2px; }
+    .glide__arrow--right { right: 2px; }
 
-  // A partir de 576 px entra a arte do computador (a do celular, só abaixo disso): ancorada à esquerda, onde ficam os textos.
-  @media (min-width: 576px) {
-    .glide__slide img { object-position: left center; }
-  }
+    // A partir de 576 px entra a arte do computador (a do celular, só abaixo disso): ancorada à esquerda, onde ficam os textos.
+    @media (min-width: 576px) {
+      .glide__slide img { object-position: left center; }
+    }
 
-  // Computador: a caixa acompanha a proporção da arte (1920×400, --pe-banner-ratio) para ela aparecer inteira, até
-  // 400 px de altura (em 1920 px de tela ou mais). Antes era fixa em 283 px e cortava o título e o botão da arte.
-  @media (min-width: 992px) {
-    height: min(calc(100vw * var(--pe-banner-ratio, .209)), 400px) !important;
-    width: 100%;
-    margin: 0;
-    border-radius: 0;
+    // Computador: a caixa acompanha a proporção da arte (1920×400, --pe-banner-ratio) para ela aparecer inteira, até
+    // 400 px de altura (em 1920 px de tela ou mais). Antes era fixa em 283 px e cortava o título e o botão da arte.
+    @media (min-width: 992px) {
+      height: min(calc(100vw * var(--pe-banner-ratio, .209)), 400px) !important;
+      width: 100%;
+      margin: 0;
+      border-radius: 0;
+    }
   }
 }
