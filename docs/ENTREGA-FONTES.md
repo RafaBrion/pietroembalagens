@@ -1,12 +1,24 @@
 # Entrega 3 — Quicksand local
 
-Preparada em 14/10/2026; **não publicada**. A entrega 2b permanece fora desta branch e de produção.
+**Publicada e validada em 14/10/2026, às 12h52 BRT**, pelo PR #90. A entrega 2b permanece fora de produção.
 
 Advisor: intenção e ajuste `false` aprovados antes da implementação. Parecer final favorável sobre aplicação `89818d05` e documentação `c0ecabdb`, sem impeditivos para PR/revisão de Rafael. Não aprova merge/deploy; exige aprovação concreta de Rafael, CI completo e verificações públicas previstas abaixo.
 
 - Base: `6a26e8d26c8ddfadaf238a9f434b49238351b9e1` (master com 2a e dois triggers do bot).
 - Aplicação: `89818d051b3217fa4ad96c478b67f5c008d0ead7`, branch `perf/fontes-quicksand-local`.
 - Última publicação funcional registrada da 2a: merge `deed7fd2ad43c2f9a80423e555fdedd619f0f4f9`, Actions `38546529280`, Hosting `c9387863ac4b4db2`, SSR `634`. Reconfirmar os identificadores atuais antes de publicar; os triggers posteriores não autorizam presumir outra versão.
+
+## Registro da publicação
+
+- Rafael integrou o PR #90; merge `e78a30ccbf03e3b15f25ffdd5e29cd075678306f`, com árvore idêntica à versão revisada. [Actions 38592708589](https://github.com/ecomplus-stores/pietroembalagens/actions/runs/38592708589) concluído com sucesso: 124 testes, build, guardas de fonte/artefatos, baseline e deploy.
+- Hosting `165c5410780640d8`, release `1791993158183000`, SSR `635 ACTIVE`/Node 20. Baseline capturada antes da publicação: Hosting `c9387863ac4b4db2`, SSR `634`.
+- Verificação pública: home/categoria/produto/app/search já têm preload; CSS/WOFF2/worker/helper/licença/proveniência correspondem aos artefatos do CI. Os 66 arquivos JS públicos da aplicação são idênticos aos da publicação 2a.
+- Menu/busca desktop e celular, variação/quantidade, carrinho e entrada do checkout passaram, sem erros JS e sem pedido/pagamento. Quicksand real confirmada por CDP em quatro rotas, uma transferência Latin por navegação e nenhuma Quicksand externa.
+- PWA atual ativa, fonte Latin disponível offline e rota lazy de conta funcionando. HTML público capturado depois da 2a também funcionou com os assets atuais. **A transição de um worker público antigo não foi observada**, porque o deploy terminou antes de abrir o navegador; o ensaio completo antigo/novo/rollback foi local.
+- Rollback reconferido sobre o merge efetivamente publicado: revert do commit de aplicação, retendo o diretório completo de fontes, sem conflitos e com somente os quatro arquivos de carregamento afetados. Nenhuma reversão de produção executada.
+- Advisor deu aceite pós-publicação favorável, sem impeditivos. Perfil temporário de testes apagado, TLS mantido ativo e confiança permanente inalterada. Ainda não há comparação pública antes/depois que comprove ganho de LCP; os números abaixo continuam sendo de laboratório.
+
+Registro detalhado e artefatos: `/workspace/.cloud-setup/fonts-investigation/published-20261014/` e `record.json` no diretório pai. Este registro documental posterior não faz parte do merge de aplicação publicado; não exige outro deploy para a melhoria funcionar.
 
 ## Mudança e limites
 
