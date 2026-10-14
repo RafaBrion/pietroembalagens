@@ -2,6 +2,8 @@
 
 **DRAFT — não mesclar nem publicar.** Preparada para revisão, **não publicada**. Advisor liberou somente a branch/draft; a comparação final está bloqueada e precisa terminar antes de nova aprovação. A entrega 2b continua fora desta branch e de produção.
 
+A alternativa autorizada é a validação isolada no GitHub Actions, em `test/entrega-4-actions`, sem deploy: [instruções, condições e limites](VALIDACAO-IMAGENS-ACTIONS.md). Preparar o workflow não equivale a concluir os testes nem remove este HOLD.
+
 - Base publicada: `e78a30ccbf03e3b15f25ffdd5e29cd075678306f` (fontes/PR #90).
 - Aplicação: prioridade em `91060ccfdb8a8f8b8f99bd762bb190061799e226` e reserva SSR/CSS em `fde272c17e8a4703afc17edaa61fd23b88306783`; branch `perf/imagem-principal`.
 - Baseline identificada: Actions `38592708589`, Hosting `165c5410780640d8`, release `1791993158183000`, SSR `635 ACTIVE`. Reconfirmar imediatamente antes de publicar.

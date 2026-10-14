@@ -1,0 +1,58 @@
+name: Entrega 4 - validar imagens (sem deploy)
+
+on:
+  push:
+    branches: [test/entrega-4-actions]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-qa-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: >-
+      github.ref == 'refs/heads/test/entrega-4-actions' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CHROME_BIN: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.20.2
+      - name: Prepare reports
+        run: |
+          echo "IMAGE_QA_ROOT=$RUNNER_TEMP/pietro-image-qa" >> "$GITHUB_ENV"
+          echo "IMAGE_QA_REPORTS=$RUNNER_TEMP/pietro-image-reports" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/pietro-image-reports"
+      - name: Install isolated browser tools
+        run: npm ci --prefix .github/qa/images --no-audit --no-fund
+      - name: Check QA safeguards
+        run: node --test .github/qa/images/qa.test.cjs
+      - name: Check browser and CDP availability
+        run: node .github/qa/images/browser-check.cjs
+      - name: Prepare baseline and candidate builds
+        run: node .github/qa/images/prepare.cjs
+      - name: SSR, storefront, PWA and 32 paired measurements
+        run: node .github/qa/images/run.cjs
+      - name: Write report (including failed phases)
+        if: always()
+        run: node .github/qa/images/report.cjs
+      - name: Preserve reports and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: entrega-4-validation-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ env.IMAGE_QA_REPORTS }}/
+          if-no-files-found: error
+          retention-days: 14

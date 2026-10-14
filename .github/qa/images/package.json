@@ -1,0 +1,7 @@
+{
+  "name": "pietro-image-validation",
+  "private": true,
+  "version": "1.0.0",
+  "engines": { "node": "20.x" },
+  "dependencies": { "puppeteer-core": "24.15.0", "yaml": "2.8.1" }
+}
