@@ -67,6 +67,8 @@ if (stamps && Array.isArray(stamps.stamps_list) && stamps.stamps_list.length) {
                       media="(min-width: 400px)"
                     >
                     <img
+                      fetchpriority="high"
+                      loading="eager"
                       src="<%= imgObj.url.replace(/\.webp$/, '') %>"
                       alt="<%= imgObj.alt || _.state.name %>"
                       <% if (imgObj.url.startsWith('https://ecoms1.com/')) { %>

@@ -59,6 +59,10 @@ if (opt.img) {
           <img
             src="<%= _.assetsPrefix || '' %><%= opt.img.replace('.webp', '.png') %>"
             alt="<%= opt.alt %>"
+            <% if (opt.fetch_priority === 'high') { %>
+              fetchpriority="high"
+              loading="eager"
+            <% } %>
             <% if (width) { %>
               width="<%= width %>"
               height="<%= height %>"

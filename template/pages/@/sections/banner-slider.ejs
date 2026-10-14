@@ -1,5 +1,9 @@
 <%
 const timestamp = Date.now()
+// Only the first enabled home section can own the priority hero.
+const isPriorityBanner = _.pageName === 'home' &&
+  Array.isArray(_.state.sections) &&
+  _.state.sections.find(section => section && section.enabled !== false) === opt
 let slides
 if (Array.isArray(opt.slides)) {
   slides = opt.slides.filter(({ start, end }) => {
@@ -50,7 +54,12 @@ if (slides && slides.length) {
           <% for (let i = 0; i < slides.length; i++) { %>
             <li class="glide__slide">
               <%- await include('@/sections/inc/banner', {
-                _, opt: { ...slides[i], height_auto: true, sync_load: i === 0 }
+                _, opt: {
+                  ...slides[i],
+                  height_auto: true,
+                  sync_load: i === 0,
+                  fetch_priority: isPriorityBanner && i === 0 ? 'high' : undefined
+                }
               }) %>
             </li>
           <% } %>
