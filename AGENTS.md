@@ -23,7 +23,7 @@ O usuário determinou: “sempre chame o advisor para validar o que vai fazer”
 
 ## Validação
 
-- Use Node 20 e dependências com lockfile. Execute os testes existentes e os novos testes relevantes; confira build, home, categoria, produto e rotas afetadas.
+- Use Node 20 para instalar as ferramentas e fazer o build do frontend; use Node 22 para instalar/testar as Functions e executar o Firebase CLI (incluindo descoberta dos triggers e deploy). Esta separação faz parte da migração de runtime autorizada por Rafael. Use dependências com lockfile e confira as versões efetivas em cada etapa. Execute os testes existentes e os novos testes relevantes; confira build, home, categoria, produto e rotas afetadas.
 - Valide menu/busca mobile e desktop, carrinho, quantidade, preço, frete, login/OAuth e etapas do checkout em contexto de teste, sem compra real nem evento Purchase fictício em produção.
 - Alterações de frontend precisam de validação visual e de interações no navegador antes de publicar. Registre medições bloqueadas ou não executadas; não as apresente como aprovadas.
 - Preserve proxy, autenticação injetada e verificação TLS. A importação permanente do certificado do proxy no Chromium foi rejeitada pela revisão automática e não recebeu autorização explícita; não contorne esse bloqueio.

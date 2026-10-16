@@ -61,11 +61,28 @@ jobs:
       - name: Install root dependencies
         run: npm ci --only=production
 
+      - name: Setup functions Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
       - name: Install functions dependencies
-        run: cd .functions && npm ci --only=production
+        run: |
+          node -e 'if (process.versions.node.split(".")[0] !== "22") process.exit(1); console.log("Functions install:", process.version)'
+          cd .functions && npm ci --only=production
+
+      - name: Verify functions runtime and HTTP safeguards
+        run: |
+          node .github/scripts/verify-functions-runtime.cjs
+          node --test tests/ssr-compression.test.cjs tests/functions-runtime.test.cjs
 
       - name: Verify source after installation
         run: node .github/scripts/verify-deploy.cjs source
+
+      - name: Setup frontend build Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
 
       - name: Test storefront safeguards
         run: node --test tests/*.test.cjs
@@ -101,6 +118,16 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Setup deployment Node
+        if: steps.build.outputs.mode == 'build'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Verify deployment runtime
+        if: steps.build.outputs.mode == 'build'
+        run: node .github/scripts/verify-functions-runtime.cjs
+
       - name: Capture production baseline
         if: steps.build.outputs.mode == 'build'
         env:
@@ -129,6 +156,7 @@ jobs:
           GCP_ACCOUNT_KEY: ${{ secrets.GCP_ACCOUNT_KEY }}
         run: |
           set -euo pipefail
+          node .github/scripts/verify-functions-runtime.cjs
           node .github/scripts/verify-deploy.cjs source
           node .github/scripts/verify-deploy.cjs artifacts
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/pietro-firebase-adminsdk.json"
@@ -136,7 +164,7 @@ jobs:
           umask 077
           printf '%s' "$GCP_ACCOUNT_KEY" > "$GOOGLE_APPLICATION_CREDENTIALS"
           PROJECT_ID=$(node -e 'let project; try { project = JSON.parse(process.env.GCP_ACCOUNT_KEY).project_id } catch {} if (typeof project !== "string" || !/^[a-z][a-z0-9-]{4,28}[a-z0-9]$/.test(project)) { console.error("Invalid Firebase project configuration"); process.exit(1) } process.stdout.write(project)')
-          npx firebase deploy --project="$PROJECT_ID" --non-interactive
+          node node_modules/firebase-tools/lib/bin/firebase.js deploy --project="$PROJECT_ID" --non-interactive
           node .github/scripts/capture-deployment.cjs "$PROJECT_ID" after
 
       - name: Preserve production resource identifiers
