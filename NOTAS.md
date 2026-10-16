@@ -30,12 +30,14 @@ Para restaurar: `git checkout backup-29mar2026` ou `git checkout v-antes-ajustes
 
 ## ✅ Histórico de Alterações
 
-### 15/10/2026 — Velocidade 5: cache das fontes versionadas (preparada, sem publicação)
+### 16/10/2026 — Velocidade 5: cache das fontes versionadas (publicada)
 
 - Regras exatas para os três WOFF2 Quicksand com hash: de um dia/600 s compartilhado para um ano/immutable. Imagens CMS, HTML, configurações e cache de JS/CSS preservados. Base `704463e8`, aplicação `5c0759f5`; entregas 4 e 2B continuam suspensas e fora desta branch.
 - 127 testes e build/SSR aprovados. Fonte real e cache HTTP/PWA/offline/rollback validados em laboratório; menor revalidação após idade simulada, sem ganho público de LCP declarado. Fontes/CSS/JS/worker preservados; diferenças geradas de home/sitemap delimitadas.
 - Revert real testado com 124 testes, novo build/SSR e headers anteriores. Três quantidades comerciais mudaram entre os builds e foram confirmadas na API pública; não foram normalizadas. Rollback exige novo deploy e não expira respostas já armazenadas por um ano.
-- Advisor deu parecer final favorável à preparação/PR draft, sem merge/deploy. Limites, validação e comandos: `docs/ENTREGA-CACHE-FONTES.md`. Publicação depende da revisão concreta de Rafael e do fluxo habitual.
+- Rafael autorizou publicar; advisor reconsultado deu parecer favorável ao SHA exato `4c9f7180`. Após negativa de escrita no ambiente de nuvem, Rafael enviou pelo Mac o avanço sem force de `master`. Actions `38844354322` concluído com 127 testes; Hosting `07b3e7bf00bc22a1`, SSR `636 ACTIVE`. Baseline anterior: Hosting `165c5410780640d8`, SSR `635`.
+- 14 checks HTTPS públicos e oito verificações de fonte real no navegador passaram (home/categoria/produto/carrinho em celular/computador), sem erros JavaScript. Fontes com bytes conferidos e cache de um ano/immutable; frete e banners do CMS com políticas preservadas. Fonte offline na PWA após limpar cache HTTP e retorno à rede aprovados. Não foi medido ganho público de LCP. Limites, falhas iniciais do harness, evidências e rollback: `docs/ENTREGA-CACHE-FONTES.md`.
+- Pendência separada: Firebase avisou no deploy que Node.js 20 nas Functions será descomissionado em 31/10/2026; planejar migração para preservar novos deploys/rollback, sem alterar runtime nesta entrega.
 
 ### 14/10/2026 — Velocidade 3: Quicksand local (publicada)
 

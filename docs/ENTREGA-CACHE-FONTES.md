@@ -1,6 +1,6 @@
 # Entrega 5 — cache das fontes versionadas
 
-**Preparada para revisão; ainda não publicada.** Entregas 4 e 2B continuam suspensas e fora desta branch.
+**Publicada em 16/10/2026**, pelo SHA aprovado `4c9f71804c399e8e710560d6b9421444382bf42a`. Entregas 4 e 2B continuam suspensas e fora desta entrega.
 
 - Branch: `perf/cache-fontes-versionadas`.
 - Base atual: `704463e8cadad05178414d6ae139efa1fa23a67f`. O avanço desde `e78a30cc` altera somente o trigger/slug de `.ecomplus.cd.json`, preservado nesta entrega.
@@ -52,9 +52,9 @@ O template copia `quantity` de `opt.item`; as vitrines consultam a busca/API dur
 
 ## Publicação e reversão
 
-A preparação e as evidências exigem parecer final do advisor e revisão de Rafael antes do merge. Push em master dispara o fluxo atual. Reconfirmar master, SHA aprovado e baseline de produção; acompanhar todos os testes/build/guardas e publicação de Hosting **e** SSR. Registrar Actions, Hosting e versão da Function acessíveis. Ainda não houve execução de deploy ou de CI desta branch no GitHub.
+A publicação recebeu autorização expressa de Rafael (“pode publicar”) e novo parecer favorável do advisor para o SHA exato `4c9f7180`. O push pelo ambiente de nuvem foi negado por permissão do GitHub; Rafael realizou pelo Mac o avanço sem force de `master`, de `704463e8` para `4c9f7180`. O Actions confirmou checkout do SHA aprovado, 127 testes aprovados sem falhas/skips, guardas de fonte/build, preservação do baseline e deploy de Hosting **e** SSR.
 
-Depois da publicação autorizada: GET dos três arquivos e respectivos hashes/headers; conferir que frete, imagens CMS, app e assets sem hash mantêm as regras anteriores; fonte real em home/categoria/produto/app, sessão nova e PWA/aba já aberta. Nenhum envio de pedido ou pagamento é necessário para verificar esta mudança de headers.
+Os resultados de verificação pública estão registrados abaixo. Nenhum pedido ou pagamento foi enviado para verificar esta mudança de headers.
 
 Gatilhos de reversão: política aplicada a recurso indevido, erro de fonte/cache atribuível à entrega ou falha operacional causada por ela. Com checkout limpo e a mudança no histórico, preparar em branch:
 
@@ -78,3 +78,24 @@ O catálogo de teste fica local e não é pacote de redeploy. Autenticação, pr
 ## Parecer final do advisor — 15/10/2026
 
 Favorável ao commit/push somente da branch de preparação e à criação de PR draft para revisão de Rafael. Os 127 testes, ensaios HTTP/PWA e rollback real sustentam o escopo restrito. As diferenças de dados comerciais, a idade simulada e a impossibilidade de expirar respostas já frescas foram consideradas. Não aprova merge/deploy nem declara ganho público de LCP; CI e conferência pública continuam previstos no fluxo de publicação autorizada. Entregas 4 e 2B permanecem suspensas.
+
+## Publicação confirmada — 16/10/2026
+
+O parecer acima registra a etapa de preparação. Antes do envio, o advisor foi consultado novamente e deu parecer favorável à publicação do SHA exato `4c9f7180`, após autorização de Rafael, mantendo validações, baseline e rollback.
+
+- [Actions 38844354322](https://github.com/ecomplus-stores/pietroembalagens/actions/runs/38844354322): concluído com sucesso; envio iniciado às 00:12 e workflow concluído às 00:15, horário de Brasília.
+- Hosting: `165c5410780640d8` → `07b3e7bf00bc22a1`; release `1792120512845000`, publicada às 00:15:12.
+- SSR: versão `635` → `636`, estado `ACTIVE`; mesma aplicação aprovada, com a preparação de conteúdo do build atual. Hosting e SSR são operações separadas.
+- Os arquivos de evidência do CI têm SHA-256 conferidos contra `deployment.json`. Comparando com o arquivo do CI anterior efetivamente publicado (`e78a30cc`), ambos contêm 280 arquivos: nenhum adicionado/removido; somente `firebase.json`, home e sitemap diferem. Fontes, CSS, JavaScript, worker e metadados de bundles são idênticos. O arquivo inclui dois metadados fora de `dist`; não se trata de dois assets públicos novos. HTML/sitemap podem refletir o catálogo consultado durante o build; não se declara equivalência integral desses documentos.
+- 14 verificações HTTPS públicas passaram: três fontes retornam 200, `public, max-age=31536000, immutable` e os mesmos bytes do build aprovado. Frete continua `no-store`; banner do CMS, licença, proveniência, fonte de ícones e app mantêm as políticas anteriores. Home, categoria, produto e app retornam 200; CSS e worker conferem com os artefatos publicados. A entrega 2B continua ausente.
+- Chromium 154, HTTPS verificado: home/categoria/produto/carrinho em 390 e 1440 px passaram, com Quicksand efetivamente desenhada, uma solicitação da fonte Latin com o novo header em cada sessão nova e nenhum erro JavaScript. Em sessão persistente, o worker ativou; após limpar o cache HTTP e ficar offline, o GET da fonte respondeu 200/28.244 bytes com o novo header. A fonte permaneceu desenhada offline e depois de voltar à rede/recarregar, sem erro. Não foi observada uma transição real de um worker da publicação anterior; os ensaios locais anteriores cobrem a mudança de política e o rollback com o mesmo worker.
+- As tentativas iniciais do smoke público falharam por seletores do próprio script: `.pe-h2__label` ausente na categoria e `.cart__title` ausente no carrinho vazio. O DOM real tem `h1` nesses pontos; foi inspecionado e o harness corrigido sem alteração da loja. Falhas originais preservadas; as três rotas mobile já aprovadas foram retidas na retomada. Não foram ignorados erros JavaScript. Scripts de marketing foram bloqueados só no navegador de QA; não há validação de tracking/conversão ou repetição integral do checkout nesta entrega.
+- O certificado do proxy foi confiado somente no perfil temporário autorizado de QA, com TLS ativo; esse perfil foi apagado ao concluir. A confiança permanente do usuário/sistema não foi alterada.
+
+Evidências complementares em `/workspace/.cloud-setup/cache-investigation/publication/`: `actions.json`, `actions.log`, `artifacts/`, `public-http.json`, `ci-build-comparison.json`, `previous-ci-comparison.json`, `public-browser.json`, capturas desktop/celular, `browser-trust.json` e registros das falhas iniciais de seletor. Os arquivos do CI são evidência e **não** um pacote completo de redeploy: o cache de dados foi deliberadamente excluído, como informa `deployment.json`.
+
+O rollback ensaiado continua sendo o revert delimitado de `5c0759f5`, preservando fontes e mudanças posteriores. O baseline real anterior agora está confirmado nos identificadores acima. Nenhum rollback foi executado em produção.
+
+**Parecer pós-deploy do advisor:** favorável ao encerramento e ao registro documental local, sem push/deploy adicional. Conferidos CI, identificadores reais, 14 checks HTTP, oito verificações de fonte real, PWA offline/retorno à rede e exclusão do perfil temporário. Sem indicação de reverter a entrega 5; entregas 4 e 2B seguem suspensas. Não se declara troca de versão do worker, ganho público de LCP ou validação integral dos fluxos comerciais.
+
+**Pendência operacional separada:** o log real do Firebase informa descomissionamento de Node.js 20 nas Functions em **31/10/2026**, afetando novos deploys e a possibilidade de publicar um revert depois dessa data. Preparar migração de runtime com testes e advisor em outra entrega; esta publicação não alterou runtime/dependências. O aviso não impediu o deploy atual.
