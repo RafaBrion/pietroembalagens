@@ -166,6 +166,7 @@ jobs:
           PROJECT_ID=$(node -e 'let project; try { project = JSON.parse(process.env.GCP_ACCOUNT_KEY).project_id } catch {} if (typeof project !== "string" || !/^[a-z][a-z0-9-]{4,28}[a-z0-9]$/.test(project)) { console.error("Invalid Firebase project configuration"); process.exit(1) } process.stdout.write(project)')
           node node_modules/firebase-tools/lib/bin/firebase.js deploy --project="$PROJECT_ID" --non-interactive
           node .github/scripts/capture-deployment.cjs "$PROJECT_ID" after
+          node .github/scripts/verify-functions-runtime.cjs --deployed "$DEPLOY_EVIDENCE_DIR/production-after.json"
 
       - name: Preserve production resource identifiers
         if: always() && steps.build.outputs.mode == 'build'

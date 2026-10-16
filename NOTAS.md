@@ -30,6 +30,12 @@ Para restaurar: `git checkout backup-29mar2026` ou `git checkout v-antes-ajustes
 
 ## ✅ Histórico de Alterações
 
+### 16/10/2026 — Migração Functions Node 22 (preparação autorizada até publicação)
+
+- Runtime das Functions de 20 para 22, preservando geração/região/nome/permissões e todas as dependências. Build/frontend continuam em Node 20; instalação/testes/descoberta/deploy das Functions executam Node 22. Guardas impedem processo incompatível ou confirmação de deploy sem `ACTIVE nodejs22`.
+- 130 testes Node 20 e 23 testes HTTP/runtime Node 22 aprovados. Build/SSR, descoberta Firebase real e comparações HTTP do SSR anterior/candidato/recuperação passaram. Fonte anterior foi ensaiada em Node 22; não há garantia de downgrade do provedor para Node 20.
+- Rafael autorizou seguir até o fim; parecer pré-implementação favorável do advisor. A publicação exige parecer final e conferência pública. Base: `4c9f7180`, Hosting `07b3e7bf00bc22a1`, SSR `636 nodejs20`. Detalhes e recuperação: `docs/MIGRACAO-FUNCTIONS-NODE22.md`. Entregas 4 e 2B continuam suspensas.
+
 ### 16/10/2026 — Velocidade 5: cache das fontes versionadas (publicada)
 
 - Regras exatas para os três WOFF2 Quicksand com hash: de um dia/600 s compartilhado para um ano/immutable. Imagens CMS, HTML, configurações e cache de JS/CSS preservados. Base `704463e8`, aplicação `5c0759f5`; entregas 4 e 2B continuam suspensas e fora desta branch.

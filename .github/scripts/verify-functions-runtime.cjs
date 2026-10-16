@@ -36,13 +36,27 @@ function checkRuntime (cwd) {
   return { runtime, node: process.version, binary, firebaseTools: localRequire('firebase-tools/package.json').version }
 }
 
+function checkDeployedRuntime (record, sha) {
+  if (!/^[a-f0-9]{40}$/.test(sha || '') || record.approvedSha !== sha || record.phase !== 'after') {
+    throw new Error('Runtime evidence must identify this approved deployment')
+  }
+  if (record.ssr?.runtime !== 'nodejs22' || record.ssr.status !== 'ACTIVE' || !record.ssr.versionId) {
+    throw new Error('The deployed SSR must be ACTIVE on nodejs22')
+  }
+  return { runtime: record.ssr.runtime, versionId: record.ssr.versionId, status: record.ssr.status }
+}
+
 if (require.main === module) {
   try {
     console.log(JSON.stringify(checkRuntime(process.cwd())))
+    if (process.argv.length > 2) {
+      if (process.argv[2] !== '--deployed' || !process.argv[3]) throw new Error('Expected --deployed metadata-file')
+      console.log(JSON.stringify(checkDeployedRuntime(JSON.parse(fs.readFileSync(process.argv[3])), process.env.GITHUB_SHA)))
+    }
   } catch (error) {
     console.error(error.message)
     process.exitCode = 1
   }
 }
 
-module.exports = { checkConfiguration, checkRuntime }
+module.exports = { checkConfiguration, checkRuntime, checkDeployedRuntime }

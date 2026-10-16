@@ -3,7 +3,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
-const { checkConfiguration } = require('../.github/scripts/verify-functions-runtime.cjs')
+const { checkConfiguration, checkDeployedRuntime } = require('../.github/scripts/verify-functions-runtime.cjs')
 
 function fixture (t) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'functions-runtime-'))
@@ -34,4 +34,15 @@ test('Functions runtime rejects package/lockfile drift and overriding Firebase c
   write('.functions/package-lock.json', { packages: { '': { engines: { node: '22' } } } })
   write('firebase.json', { functions: { source: '.functions', runtime: 'nodejs20' } })
   assert.throws(() => checkConfiguration(cwd, '22.1.0'), /override/)
+})
+
+test('deployment cannot succeed with a previous runtime, stale evidence or an inactive SSR', () => {
+  const sha = 'a'.repeat(40)
+  const record = { phase: 'after', approvedSha: sha, ssr: { runtime: 'nodejs22', versionId: '637', status: 'ACTIVE' } }
+  assert.equal(checkDeployedRuntime(record, sha).runtime, 'nodejs22')
+  for (const ssr of [{ ...record.ssr, runtime: 'nodejs20' }, { ...record.ssr, status: 'DEPLOY_IN_PROGRESS' }]) {
+    assert.throws(() => checkDeployedRuntime({ ...record, ssr }, sha), /ACTIVE on nodejs22/)
+  }
+  assert.throws(() => checkDeployedRuntime({ ...record, phase: 'before' }, sha), /this approved deployment/)
+  assert.throws(() => checkDeployedRuntime(record, 'b'.repeat(40)), /this approved deployment/)
 })
